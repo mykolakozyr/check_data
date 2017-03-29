@@ -30,11 +30,11 @@ list_names = list() #list for attributes names
 #add rules for the attribute
 def add_rules(a):
     while True:
-        inp = raw_input('Enter the possible option for the "' + str(i) + '" value: ')
+        inp = raw_input('Enter the possible option for the "' + str(a) + '" value: ')
         if inp == 'secret word':
             break
-        globals()['list_'+str(i)].append(inp)
-    print globals()['list_'+str(i)]
+        globals()['list_'+str(a)].append(inp)
+    print globals()['list_'+str(a)]
 
 #check if the value exists in our rules table
 def check_value(a, b):
@@ -44,11 +44,23 @@ def check_value(a, b):
     elif str(a) in globals()['dict_'+str(b)]:
             file_output.write(str(globals()['dict_'+str(b)][str(a)])+',')
     else:
-        corrected_value = raw_input(unicode(('There is a value "' + str(a) + '" . Enter the correct value: '), 'utf-8')) #enter the corrected value
+        corrected_value = raw_input(unicode(('There is a value "' + str(a) + '" in the column "'+str(b)+'" . Enter the correct value: '), 'utf-8')) #enter the corrected value
         globals()['dict_'+str(b)][str(a)] = corrected_value
         file_output.write(str(corrected_value)+',')
 
-
+#upload rules via the same named file
+def upload_rules(a):
+    try:
+        file = open (str(a)+'.txt','r')
+        for line in file:
+            line = line.split(',')
+            for v in line:
+                v = v.strip()
+                globals()['list_'+str(a)].append(v)
+    except KeyError:
+        print 'Cannot find the file'
+        add_rules(a)
+    print globals()['list_'+str(a)]
     
 for line in file:
     if count == 1: #checking data with attributes names
@@ -58,15 +70,23 @@ for line in file:
             quest = 'Do we have some special attributes for the column "'+str(i)+'" ? (y/n)'
             rule_need = 0
             rule_need = check_answer(rule_need, quest) #checking if we need rules to selected attributes
+            file_output.write(str(i) + ',')  # write the first row
             if rule_need == 1:
                 list_names.append(i) #add the attribute name to the list
                 globals()['list_'+str(i)] = list() #create a list for every attribute name. Rules are going to be store here
                 globals()['dict_'+str(i)] = dict() #create a dict for every attribute name. New rules are going to be store here
                 count = int(count)+1
-                add_rules(i)
+                quest = 'Should I try to upload the rules? (y/n)'
+                upl_need = 0
+                upl_need = check_answer(upl_need, quest)
+                if upl_need == 1:
+                    upload_rules(i)
+                else:
+                    add_rules(i)
             else:
                 list_names.append('0')
                 continue
+        file_output.write('\n')
         count = count + 1 #for preventing ask rules for the second line
     else: #checking next data lines
         line = line.split(separator)
@@ -84,3 +104,9 @@ for line in file:
             except IndexError:
                 continue
         file_output.write('\n')
+
+
+file = open ('test.csv','r')
+file_final = open ('output.txt','w')
+for line in file:
+    file_final.write(str(line[0:-2])+'\n')
